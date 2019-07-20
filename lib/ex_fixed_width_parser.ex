@@ -70,4 +70,10 @@ defmodule ExFixedWidthParser do
   end
 
   defp parse_value(string, :text), do: {:ok, string, nil}
+
+  defp parse_value(string, func) when is_function(func) do
+    case func.(string) do
+      {:ok, val} -> {:ok, val, nil}
+    end
+  end
 end

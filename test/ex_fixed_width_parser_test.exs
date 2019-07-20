@@ -40,6 +40,24 @@ defmodule ExFixedWidthParserTest do
       ]
     end
 
+    test "parses using a custom parser" do
+      value = """
+              10AB
+              20CD
+              """
+      format = %{
+        1..2 => [:number, fn (data) -> {:ok, String.to_integer(data) * 3} end],
+        3..4 => [:word, fn (data) -> {:ok, "#{data}-parsed"} end],
+      }
+
+      assert {:ok, result} = parse(value, format)
+
+      assert result == [
+        %{number: 30, word: "AB-parsed"},
+        %{number: 60, word: "CD-parsed"},
+      ]
+    end
+
     test "it returns a warning when there are integer parsing errors" do
       value = """
               2019071Y
