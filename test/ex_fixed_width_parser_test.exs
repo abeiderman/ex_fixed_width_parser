@@ -88,6 +88,54 @@ defmodule ExFixedWidthParserTest do
       assert second_error[:type] == :integer
       assert Regex.match?(~r/parse.*R7/, second_error[:message])
     end
+
+    test "parses numbers in overpunch format" do
+      value = """
+              1652{1653E
+              2652}0653N
+              """
+      format = %{
+        1..5 => [:amount, :overpunch],
+        6..10 => [:fee, overpunch: 2],
+      }
+
+      assert {:ok, result} = parse(value, format)
+
+      assert result == [
+        %{amount: 16520, fee: Decimal.new("165.35")},
+        %{amount: -26520, fee: Decimal.new("-65.35")},
+      ]
+    end
+
+    test "it returns a warning when there are overpunch parsing errors" do
+      value = """
+              1D52{1653E
+              2652} 3532
+              """
+      format = %{
+        1..5 => [:amount, :overpunch],
+        6..10 => [:fee, overpunch: 2],
+      }
+
+      assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
+
+      assert data == [
+        %{amount: nil, fee: Decimal.new("165.35")},
+        %{amount: -26520, fee: nil},
+      ]
+
+      assert first_error[:line_number] == 1
+      assert first_error[:columns] == 1..5
+      assert first_error[:name] == :amount
+      assert first_error[:type] == :overpunch
+      assert Regex.match?(~r/overpunch/, first_error[:message])
+
+      assert second_error[:line_number] == 2
+      assert second_error[:columns] == 6..10
+      assert second_error[:name] == :fee
+      assert second_error[:type] == {:overpunch, 2}
+      assert Regex.match?(~r/overpunch/, second_error[:message])
+    end
   end
 
   defp parse(value, format) do

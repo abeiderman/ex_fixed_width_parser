@@ -10,20 +10,27 @@ defmodule ExFixedWidthParser.OverpunchParser do
   defp do_parse("", _), do: {:error, nil}
 
   defp do_parse(string, 0) do
-    {sign, integer} = parse_as_integer(string)
-    {:ok, sign * integer}
+    case parse_as_integer(string) do
+      {sign, integer} -> {:ok, sign * integer}
+      _ -> {:error, nil}
+    end
   end
 
   defp do_parse(string, decimals) when is_integer(decimals) and decimals > 0 do
-    {sign, integer} = parse_as_integer(string)
-    {:ok, Decimal.new(sign, abs(integer), -decimals)}
+    case parse_as_integer(string) do
+      {sign, integer} -> {:ok, Decimal.new(sign, abs(integer), -decimals)}
+      _ -> {:error, nil}
+    end
   end
 
   defp parse_as_integer(string) do
     {last_digit, sign} = string |> String.last |> convert_last_digit
     numeric_part = String.slice(string, 0..-2)
 
-    {sign, String.to_integer("#{numeric_part}#{last_digit}")}
+    case Integer.parse("#{numeric_part}#{last_digit}") do
+      {val, ""} -> {sign, val}
+      _ -> :error
+    end
   end
 
   defp convert_last_digit(digit) do
@@ -48,6 +55,7 @@ defmodule ExFixedWidthParser.OverpunchParser do
       "G" -> {7, 1}
       "H" -> {8, 1}
       "I" -> {9, 1}
+      _ -> {:error, 0}
     end
   end
 end

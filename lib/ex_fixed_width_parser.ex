@@ -71,6 +71,22 @@ defmodule ExFixedWidthParser do
 
   defp parse_value(string, :text), do: {:ok, string, nil}
 
+  defp parse_value(string, :overpunch) do
+    parse_value(string, {:overpunch, 0})
+  end
+
+  defp parse_value(string, {:overpunch, decimals}) do
+    case ExFixedWidthParser.OverpunchParser.parse(string, decimals) do
+      {:ok, val} -> {:ok, val, nil}
+      {:error, val} ->
+        {
+          :error,
+          val,
+          "Unable to parse '#{string}' as an overpunch numeric value with #{decimals} decimal places"
+        }
+    end
+  end
+
   defp parse_value(string, func) when is_function(func) do
     case func.(string) do
       {:ok, val} -> {:ok, val, nil}
