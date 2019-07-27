@@ -96,7 +96,7 @@ defmodule ExFixedWidthParserTest do
               """
       format = %{
         1..5 => [:amount, :overpunch],
-        6..10 => [:fee, overpunch: 2],
+        6..10 => [:fee, overpunch: [decimals: 2]],
       }
 
       assert {:ok, result} = parse(value, format)
@@ -114,7 +114,7 @@ defmodule ExFixedWidthParserTest do
               """
       format = %{
         1..5 => [:amount, :overpunch],
-        6..10 => [:fee, overpunch: 2],
+        6..10 => [:fee, overpunch: [decimals: 2]],
       }
 
       assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
@@ -133,8 +133,56 @@ defmodule ExFixedWidthParserTest do
       assert second_error[:line_number] == 2
       assert second_error[:columns] == 6..10
       assert second_error[:name] == :fee
-      assert second_error[:type] == {:overpunch, 2}
+      assert second_error[:type] == {:overpunch, [decimals: 2]}
       assert Regex.match?(~r/overpunch/, second_error[:message])
+    end
+
+    test "parses undelimited decimal numbers" do
+      value = """
+              1652016535
+              2652306535
+              """
+      format = %{
+        1..5 => [:amount, :decimal],
+        6..10 => [:fee, decimal: [decimals: 2]],
+      }
+
+      assert {:ok, result} = parse(value, format)
+
+      assert result == [
+        %{amount: Decimal.new(16520), fee: Decimal.new("165.35")},
+        %{amount: Decimal.new(26523), fee: Decimal.new("65.35")},
+      ]
+    end
+
+    test "it returns a warning when there are decimal parsing errors" do
+      value = """
+              16F2016535
+              265230653X
+              """
+      format = %{
+        1..5 => [:amount, :decimal],
+        6..10 => [:fee, decimal: [decimals: 2]],
+      }
+
+      assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
+
+      assert data == [
+        %{amount: nil, fee: Decimal.new("165.35")},
+        %{amount: Decimal.new(26523), fee: nil},
+      ]
+
+      assert first_error[:line_number] == 1
+      assert first_error[:columns] == 1..5
+      assert first_error[:name] == :amount
+      assert first_error[:type] == :decimal
+      assert Regex.match?(~r/decimal/, first_error[:message])
+
+      assert second_error[:line_number] == 2
+      assert second_error[:columns] == 6..10
+      assert second_error[:name] == :fee
+      assert second_error[:type] == {:decimal, [decimals: 2]}
+      assert Regex.match?(~r/decimal/, second_error[:message])
     end
   end
 

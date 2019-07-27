@@ -71,11 +71,24 @@ defmodule ExFixedWidthParser do
 
   defp parse_value(string, :text), do: {:ok, string, nil}
 
-  defp parse_value(string, :overpunch) do
-    parse_value(string, {:overpunch, 0})
+  defp parse_value(string, :decimal), do: parse_value(string, {:decimal, [decimals: 0]})
+  defp parse_value(string, {:decimal, options}) do
+    case ExFixedWidthParser.DecimalParser.parse(string, options) do
+      {:ok, val} -> {:ok, val, nil}
+      :error ->
+        {
+          :error,
+          nil,
+          "Unable to parse '#{string}' as a decimal numeric value with options #{inspect(options)}"
+        }
+    end
   end
 
-  defp parse_value(string, {:overpunch, decimals}) do
+  defp parse_value(string, :overpunch) do
+    parse_value(string, {:overpunch, [decimals: 0]})
+  end
+
+  defp parse_value(string, {:overpunch, [decimals: decimals]}) do
     case ExFixedWidthParser.OverpunchParser.parse(string, decimals) do
       {:ok, val} -> {:ok, val, nil}
       {:error, val} ->
