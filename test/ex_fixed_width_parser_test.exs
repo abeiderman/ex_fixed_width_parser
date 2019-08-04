@@ -184,6 +184,53 @@ defmodule ExFixedWidthParserTest do
       assert second_error[:type] == {:decimal, [decimals: 2]}
       assert Regex.match?(~r/decimal/, second_error[:message])
     end
+
+    test "it parses dates" do
+      value = """
+              19072007222019
+              18100110032018
+              """
+      format = %{
+        1..6 => [:transaction_date, date: [format: "YYMMDD"]],
+        7..14 => [:post_date, date: [format: "MMDDYYYY"]]
+      }
+
+      assert {:ok, result} = parse(value, format)
+
+      assert result == [
+        %{transaction_date: Date.new(2019, 7, 20), post_date: Date.new(2019, 7, 22)},
+        %{transaction_date: Date.new(2018, 10, 1), post_date: Date.new(2018, 10, 3)},
+      ]
+    end
+
+    test "it returns a warning when there are date parsing errors" do
+      value = """
+              190V2007222019
+              1810011003X018
+              """
+      format = %{
+        1..6 => [:transaction_date, date: [format: "YYMMDD"]],
+        7..14 => [:post_date, date: [format: "MMDDYYYY"]]
+      }
+
+      assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
+
+      assert data == [
+        %{transaction_date: nil, post_date: Date.new(2019, 7, 22)},
+        %{transaction_date: Date.new(2018, 10, 1), post_date: nil},
+      ]
+      assert first_error[:line_number] == 1
+      assert first_error[:columns] == 1..6
+      assert first_error[:name] == :transaction_date
+      assert first_error[:type] == {:date, [format: "YYMMDD"]}
+      assert Regex.match?(~r/date/, first_error[:message])
+
+      assert second_error[:line_number] == 2
+      assert second_error[:columns] == 7..14
+      assert second_error[:name] == :post_date
+      assert second_error[:type] == {:date, [format: "MMDDYYYY"]}
+      assert Regex.match?(~r/date/, second_error[:message])
+    end
   end
 
   defp parse(value, format) do

@@ -1,7 +1,7 @@
 defmodule ExFixedWidthParser do
   def parse(input_io, format) do
     case parse_lines([], input_io, format) do
-      {lines, []} -> {:ok, lines }
+      {lines, []} -> {:ok, lines}
       {lines, errors}  -> {:warn, [data: lines, errors: errors]}
     end
   end
@@ -29,7 +29,7 @@ defmodule ExFixedWidthParser do
 
   defp parse_line_slice(line_number, line, range, [name, type]) do
     case line |> line_slice(range) |> parse_value(type) do
-      {:ok, val, _} -> [tuple: {name, val}]
+      {:ok, val} -> [tuple: {name, val}]
       {_, val, error} ->
         [
           tuple: {name, val},
@@ -45,9 +45,7 @@ defmodule ExFixedWidthParser do
     end
   end
 
-  def map_from_line(parsed_values) do
-    parsed_values |> Enum.map(& &1[:tuple]) |> Map.new
-  end
+  def map_from_line(parsed_values), do: parsed_values |> Enum.map(& &1[:tuple]) |> Map.new
 
   defp errors_from_line(parsed_values) do
     parsed_values
@@ -55,26 +53,24 @@ defmodule ExFixedWidthParser do
     |> Enum.map(& &1[:error])
   end
 
-  defp line_slice(line, first..last) do
-    {:ok, line |> String.slice((first - 1)..(last - 1))}
-  end
+  defp line_slice(line, first..last), do: {:ok, line |> String.slice((first - 1)..(last - 1))}
 
   defp parse_value({:ok, string}, type), do: parse_value(string, type)
 
   defp parse_value(string, :integer) do
     case Integer.parse(string) do
       :error -> {:error, nil, "Unable to parse '#{string}' as an integer"}
-      {val, ""} -> {:ok, val, nil}
+      {val, ""} -> {:ok, val}
       {val, extra} -> {:warn, val, "The substring '#{extra}' of '#{string}' could not be parsed as an integer"}
     end
   end
 
-  defp parse_value(string, :text), do: {:ok, string, nil}
+  defp parse_value(string, :text), do: {:ok, string}
 
   defp parse_value(string, :decimal), do: parse_value(string, {:decimal, [decimals: 0]})
   defp parse_value(string, {:decimal, options}) do
     case ExFixedWidthParser.DecimalParser.parse(string, options) do
-      {:ok, val} -> {:ok, val, nil}
+      {:ok, val} -> {:ok, val}
       :error ->
         {
           :error,
@@ -84,13 +80,25 @@ defmodule ExFixedWidthParser do
     end
   end
 
-  defp parse_value(string, :overpunch) do
-    parse_value(string, {:overpunch, [decimals: 0]})
+  defp parse_value(string, {:date, [format: format]}) do
+    with {:ok, date_format} <- ExFixedWidthParser.DateFormatParser.parse(format),
+         {:ok, parsed_date} <- ExFixedWidthParser.DateParser.parse(string, date_format)
+    do
+      {:ok, parsed_date}
+    else
+      :error ->
+        {
+          :error,
+          nil,
+          "Unable to parse date '#{string}' with format '#{format}'"
+        }
+    end
   end
 
+  defp parse_value(string, :overpunch), do: parse_value(string, {:overpunch, [decimals: 0]})
   defp parse_value(string, {:overpunch, [decimals: decimals]}) do
     case ExFixedWidthParser.OverpunchParser.parse(string, decimals) do
-      {:ok, val} -> {:ok, val, nil}
+      {:ok, val} -> {:ok, val}
       {:error, val} ->
         {
           :error,
@@ -100,9 +108,5 @@ defmodule ExFixedWidthParser do
     end
   end
 
-  defp parse_value(string, func) when is_function(func) do
-    case func.(string) do
-      {:ok, val} -> {:ok, val, nil}
-    end
-  end
+  defp parse_value(string, func) when is_function(func), do: func.(string)
 end
