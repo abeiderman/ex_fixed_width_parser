@@ -45,7 +45,7 @@ defmodule ExFixedWidthParser do
     end
   end
 
-  def map_from_line(parsed_values), do: parsed_values |> Enum.map(& &1[:tuple]) |> Map.new
+  defp map_from_line(parsed_values), do: parsed_values |> Enum.map(& &1[:tuple]) |> Map.new
 
   defp errors_from_line(parsed_values) do
     parsed_values
