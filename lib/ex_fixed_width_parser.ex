@@ -1,30 +1,37 @@
 defmodule ExFixedWidthParser do
-  def parse(input_io, format) do
-    case parse_lines([], input_io, format) do
-      {lines, []} -> {:ok, lines}
-      {lines, errors}  -> {:warn, [data: lines, errors: errors]}
+  def parse(input_io, format, enhancer \\ fn(l, _) -> l end) do
+    lines = parse_lines([], input_io, format, enhancer)
+
+    if lines |> Enum.any?(fn (i) -> Map.has_key?(i, :errors) end) do
+      {:warn, lines}
+    else
+      {:ok, lines}
     end
   end
 
-  defp parse_lines(list, input_io, format) do
+  defp parse_lines(list, input_io, format, enhancer) do
     case IO.read(input_io, :line) do
-      :eof -> flatten_list(list)
-      line -> parse_lines(list ++ [parse_line(Enum.count(list) + 1, line, format)], input_io, format)
+      :eof -> list
+      line ->
+        parse_lines(
+          list ++ [parse_line(Enum.count(list) + 1, line, format, enhancer)],
+          input_io,
+          format,
+          enhancer
+        )
     end
   end
 
-  defp flatten_list(list) do
-    {
-      list |> Enum.map(& &1[:line]),
-      list |> Enum.filter(& Keyword.has_key?(&1, :errors)) |> Enum.flat_map(& &1[:errors]),
-    }
+  defp parse_line(line_number, line, format_func, enhancer) when is_function(format_func) do
+    parse_line(line_number, line, format_func.(line_number, line), enhancer)
   end
 
-  defp parse_line(line_number, line, format) do
+  defp parse_line(line_number, line, format, enhancer) do
     format
     |> Map.keys()
     |> Enum.map(&parse_line_slice(line_number, line, &1, format[&1]))
     |> construct_line_result()
+    |> enhancer.(line_number)
   end
 
   defp parse_line_slice(line_number, line, range, [name, type]) do
@@ -40,8 +47,8 @@ defmodule ExFixedWidthParser do
 
   defp construct_line_result(parsed_values) do
     case {map_from_line(parsed_values), errors_from_line(parsed_values)}  do
-      {line_map, []} -> [line: line_map]
-      {line_map, errors} -> [line: line_map, errors: errors]
+      {line_map, []} -> %{data: line_map}
+      {line_map, errors} -> %{data: line_map, errors: errors}
     end
   end
 

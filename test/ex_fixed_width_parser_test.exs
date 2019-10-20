@@ -17,8 +17,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{year: 2019, month: 7, day: 14},
-        %{year: 2019, month: 7, day: 18},
+        %{data: %{year: 2019, month: 7, day: 14}},
+        %{data: %{year: 2019, month: 7, day: 18}},
       ]
     end
 
@@ -35,8 +35,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{prefix: "AB", word: "foo 123"},
-        %{prefix: "CD", word: "bar9810"},
+        %{data: %{prefix: "AB", word: "foo 123"}},
+        %{data: %{prefix: "CD", word: "bar9810"}},
       ]
     end
 
@@ -53,8 +53,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{number: 30, word: "AB-parsed"},
-        %{number: 60, word: "CD-parsed"},
+        %{data: %{number: 30, word: "AB-parsed"}},
+        %{data: %{number: 60, word: "CD-parsed"}},
       ]
     end
 
@@ -69,19 +69,19 @@ defmodule ExFixedWidthParserTest do
         7..8 => [:day, :integer],
       }
 
-      assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
+      assert {:warn, [first_item, second_item]} = parse(value, format)
 
-      assert data == [
-        %{year: 2019, month: 7, day: 1},
-        %{year: 2019, month: nil, day: 18},
-      ]
+      assert first_item[:data] == %{year: 2019, month: 7, day: 1}
+      assert second_item[:data] == %{year: 2019, month: nil, day: 18}
 
+      [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1
       assert first_error[:columns] == 7..8
       assert first_error[:name] == :day
       assert first_error[:type] == :integer
       assert Regex.match?(~r/substring.*Y.*integer/, first_error[:message])
 
+      [second_error] = second_item[:errors]
       assert second_error[:line_number] == 2
       assert second_error[:columns] == 5..6
       assert second_error[:name] == :month
@@ -102,8 +102,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{amount: 16520, fee: Decimal.new("165.35")},
-        %{amount: -26520, fee: Decimal.new("-65.35")},
+        %{data: %{amount: 16520, fee: Decimal.new("165.35")}},
+        %{data: %{amount: -26520, fee: Decimal.new("-65.35")}},
       ]
     end
 
@@ -117,19 +117,19 @@ defmodule ExFixedWidthParserTest do
         6..10 => [:fee, overpunch: [decimals: 2]],
       }
 
-      assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
+      assert {:warn, [first_item, second_item]} = parse(value, format)
 
-      assert data == [
-        %{amount: nil, fee: Decimal.new("165.35")},
-        %{amount: -26520, fee: nil},
-      ]
+      assert first_item[:data] == %{amount: nil, fee: Decimal.new("165.35")}
+      assert second_item[:data] ==  %{amount: -26520, fee: nil}
 
+      [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1
       assert first_error[:columns] == 1..5
       assert first_error[:name] == :amount
       assert first_error[:type] == :overpunch
       assert Regex.match?(~r/overpunch/, first_error[:message])
 
+      [second_error] = second_item[:errors]
       assert second_error[:line_number] == 2
       assert second_error[:columns] == 6..10
       assert second_error[:name] == :fee
@@ -150,8 +150,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{amount: Decimal.new(16520), fee: Decimal.new("165.35")},
-        %{amount: Decimal.new(26523), fee: Decimal.new("65.35")},
+        %{data: %{amount: Decimal.new(16520), fee: Decimal.new("165.35")}},
+        %{data: %{amount: Decimal.new(26523), fee: Decimal.new("65.35")}},
       ]
     end
 
@@ -165,19 +165,19 @@ defmodule ExFixedWidthParserTest do
         6..10 => [:fee, decimal: [decimals: 2]],
       }
 
-      assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
+      assert {:warn, [first_item, second_item]} = parse(value, format)
 
-      assert data == [
-        %{amount: nil, fee: Decimal.new("165.35")},
-        %{amount: Decimal.new(26523), fee: nil},
-      ]
+      assert first_item[:data] == %{amount: nil, fee: Decimal.new("165.35")}
+      assert second_item[:data] == %{amount: Decimal.new(26523), fee: nil}
 
+      [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1
       assert first_error[:columns] == 1..5
       assert first_error[:name] == :amount
       assert first_error[:type] == :decimal
       assert Regex.match?(~r/decimal/, first_error[:message])
 
+      [second_error] = second_item[:errors]
       assert second_error[:line_number] == 2
       assert second_error[:columns] == 6..10
       assert second_error[:name] == :fee
@@ -198,8 +198,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{transaction_date: Date.new(2019, 7, 20), post_date: Date.new(2019, 7, 22)},
-        %{transaction_date: Date.new(2018, 10, 1), post_date: Date.new(2018, 10, 3)},
+        %{data: %{transaction_date: Date.new(2019, 7, 20), post_date: Date.new(2019, 7, 22)}},
+        %{data: %{transaction_date: Date.new(2018, 10, 1), post_date: Date.new(2018, 10, 3)}},
       ]
     end
 
@@ -213,18 +213,19 @@ defmodule ExFixedWidthParserTest do
         7..14 => [:post_date, date: [format: "MMDDYYYY"]]
       }
 
-      assert {:warn, [data: data, errors: [first_error, second_error]]} = parse(value, format)
+      assert {:warn, [first_item, second_item]} = parse(value, format)
 
-      assert data == [
-        %{transaction_date: nil, post_date: Date.new(2019, 7, 22)},
-        %{transaction_date: Date.new(2018, 10, 1), post_date: nil},
-      ]
+      assert first_item[:data] == %{transaction_date: nil, post_date: Date.new(2019, 7, 22)}
+      assert second_item[:data] == %{transaction_date: Date.new(2018, 10, 1), post_date: nil}
+
+      [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1
       assert first_error[:columns] == 1..6
       assert first_error[:name] == :transaction_date
       assert first_error[:type] == {:date, [format: "YYMMDD"]}
       assert Regex.match?(~r/date/, first_error[:message])
 
+      [second_error] = second_item[:errors]
       assert second_error[:line_number] == 2
       assert second_error[:columns] == 7..14
       assert second_error[:name] == :post_date
