@@ -19,14 +19,28 @@ defmodule ExFixedWidthParser.Amex.EptrnParserTest do
   test "parses the header record", context do
     {:ok, list} = EptrnParser.parse(context[:file_path])
 
-    [header | _] = list
+    [%{data: data} | _] = list
 
-    IO.inspect(header)
-    assert header[:data][:type] == :file_header
-    assert header[:data][:type_code] == "DFHDR"
-    assert header[:data][:date] == Date.new(2013, 3, 8)
-    assert header[:data][:time] == Time.new(4, 52, 0)
-    assert header[:data][:file_id] == 0
-    assert header[:data][:file_name] == "LUMOS LABS INC      "
+    assert data[:type] == :file_header
+    assert data[:type_code] == "DFHDR"
+    assert data[:date] == Date.new(2013, 3, 8)
+    assert data[:time] == Time.new(4, 52, 0)
+    assert data[:file_id] == 0
+    assert data[:file_name] == "LUMOS LABS INC      "
+  end
+
+  test "parses the trailer record", context do
+    {:ok, list} = EptrnParser.parse(context[:file_path])
+
+    %{data: data} = list |> List.last()
+
+    assert data[:type] == :file_trailer
+    assert data[:type_code] == "DFTRL"
+    assert data[:date] == Date.new(2013, 3, 8)
+    assert data[:time] == Time.new(4, 52, 0)
+    assert data[:file_id] == 0
+    assert data[:file_name] == "LUMOS LABS INC      "
+    assert data[:recipient_key] == "00000000003491124567          0000000000"
+    assert data[:record_count] == 4
   end
 end

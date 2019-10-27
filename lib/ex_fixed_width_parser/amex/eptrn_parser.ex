@@ -36,7 +36,13 @@ defmodule ExFixedWidthParser.Amex.EptrnParser do
 
   defp format(line_number, total_lines, _line) when line_number == total_lines do
     %{
-      1..5 => [:type_code, :text]
+      1..5 => [:type_code, :text],
+      6..13 => [:date, date: [format: "MMDDYYYY"]],
+      14..17 => [:time, time: [format: "HHMM"]],
+      18..23 => [:file_id, :integer],
+      24..43 => [:file_name, :text],
+      44..83 => [:recipient_key, :text],
+      84..90 => [:record_count, :integer]
     }
   end
 
