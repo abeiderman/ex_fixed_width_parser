@@ -102,6 +102,21 @@ defmodule ExFixedWidthParser do
     end
   end
 
+  defp parse_value(string, {:time, [format: format]}) do
+    with {:ok, time_format} <- ExFixedWidthParser.TimeFormatParser.parse(format),
+         {:ok, parsed_time} <- ExFixedWidthParser.TimeParser.parse(string, time_format)
+    do
+      {:ok, parsed_time}
+    else
+      :error ->
+        {
+          :error,
+          nil,
+          "Unable to parse time '#{string}' with format '#{format}'"
+        }
+    end
+  end
+
   defp parse_value(string, :overpunch), do: parse_value(string, {:overpunch, [decimals: 0]})
   defp parse_value(string, {:overpunch, [decimals: decimals]}) do
     case ExFixedWidthParser.OverpunchParser.parse(string, decimals) do

@@ -232,6 +232,54 @@ defmodule ExFixedWidthParserTest do
       assert second_error[:type] == {:date, [format: "MMDDYYYY"]}
       assert Regex.match?(~r/date/, second_error[:message])
     end
+
+    test "it parses times" do
+      value = """
+              2040134000
+              0300082510
+              """
+      format = %{
+        1..4 => [:transaction_time, time: [format: "HHMM"]],
+        5..10 => [:post_time, time: [format: "HHMMSS"]]
+      }
+
+      assert {:ok, result} = parse(value, format)
+
+      assert result == [
+        %{data: %{transaction_time: Time.new(20, 40, 0), post_time: Time.new(13, 40, 0)}},
+        %{data: %{transaction_time: Time.new(3, 0, 0), post_time: Time.new(8, 25, 10)}},
+      ]
+    end
+
+    test "it returns a warning when there are time parsing errors" do
+      value = """
+              204C134000
+              0300082-10
+              """
+      format = %{
+        1..4 => [:transaction_time, time: [format: "HHMM"]],
+        5..10 => [:post_time, time: [format: "HHMMSS"]]
+      }
+
+      assert {:warn, [first_item, second_item]} = parse(value, format)
+
+      assert first_item[:data] == %{transaction_time: nil, post_time: Time.new(13, 40, 0)}
+      assert second_item[:data] == %{transaction_time: Time.new(3, 0, 0), post_time: nil}
+
+      [first_error] = first_item[:errors]
+      assert first_error[:line_number] == 1
+      assert first_error[:columns] == 1..4
+      assert first_error[:name] == :transaction_time
+      assert first_error[:type] == {:time, [format: "HHMM"]}
+      assert Regex.match?(~r/time/, first_error[:message])
+
+      [second_error] = second_item[:errors]
+      assert second_error[:line_number] == 2
+      assert second_error[:columns] == 5..10
+      assert second_error[:name] == :post_time
+      assert second_error[:type] == {:time, [format: "HHMMSS"]}
+      assert Regex.match?(~r/time/, second_error[:message])
+    end
   end
 
   defp parse(value, format) do
