@@ -198,8 +198,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{data: %{transaction_date: Date.new(2019, 7, 20), post_date: Date.new(2019, 7, 22)}},
-        %{data: %{transaction_date: Date.new(2018, 10, 1), post_date: Date.new(2018, 10, 3)}},
+        %{data: %{transaction_date: ~D[2019-07-20], post_date: ~D[2019-07-22]}},
+        %{data: %{transaction_date: ~D[2018-10-01], post_date: ~D[2018-10-03]}},
       ]
     end
 
@@ -215,8 +215,8 @@ defmodule ExFixedWidthParserTest do
 
       assert {:warn, [first_item, second_item]} = parse(value, format)
 
-      assert first_item[:data] == %{transaction_date: nil, post_date: Date.new(2019, 7, 22)}
-      assert second_item[:data] == %{transaction_date: Date.new(2018, 10, 1), post_date: nil}
+      assert first_item[:data] == %{transaction_date: nil, post_date: ~D[2019-07-22]}
+      assert second_item[:data] == %{transaction_date: ~D[2018-10-01], post_date: nil}
 
       [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1
@@ -233,6 +233,54 @@ defmodule ExFixedWidthParserTest do
       assert Regex.match?(~r/date/, second_error[:message])
     end
 
+    test "it parses julian dates" do
+      value = """
+              20190012020366
+              20180012019020
+              """
+      format = %{
+        1..7 => [:transaction_date, :julian_date],
+        8..15 => [:post_date, :julian_date]
+      }
+
+      assert {:ok, result} = parse(value, format)
+
+      assert result == [
+        %{data: %{transaction_date: ~D[2019-01-01], post_date: ~D[2020-12-31]}},
+        %{data: %{transaction_date: ~D[2018-01-01], post_date: ~D[2019-01-20]}},
+      ]
+    end
+
+    test "it returns a warning when there are julian date parsing errors" do
+      value = """
+              20A90012020366
+              20180012019000
+              """
+      format = %{
+        1..7 => [:transaction_date, :julian_date],
+        8..15 => [:post_date, :julian_date]
+      }
+
+      assert {:warn, [first_item, second_item]} = parse(value, format)
+
+      assert first_item[:data] == %{transaction_date: nil, post_date: ~D[2020-12-31]}
+      assert second_item[:data] == %{transaction_date: ~D[2018-01-01], post_date: nil}
+
+      [first_error] = first_item[:errors]
+      assert first_error[:line_number] == 1
+      assert first_error[:columns] == 1..7
+      assert first_error[:name] == :transaction_date
+      assert first_error[:type] == :julian_date
+      assert Regex.match?(~r/julian date/, first_error[:message])
+
+      [second_error] = second_item[:errors]
+      assert second_error[:line_number] == 2
+      assert second_error[:columns] == 8..15
+      assert second_error[:name] == :post_date
+      assert second_error[:type] == :julian_date
+      assert Regex.match?(~r/julian date/, second_error[:message])
+    end
+
     test "it parses times" do
       value = """
               2040134000
@@ -246,8 +294,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{data: %{transaction_time: Time.new(20, 40, 0), post_time: Time.new(13, 40, 0)}},
-        %{data: %{transaction_time: Time.new(3, 0, 0), post_time: Time.new(8, 25, 10)}},
+        %{data: %{transaction_time: ~T[20:40:00], post_time: ~T[13:40:00]}},
+        %{data: %{transaction_time: ~T[03:00:00], post_time: ~T[08:25:10]}},
       ]
     end
 
@@ -263,8 +311,8 @@ defmodule ExFixedWidthParserTest do
 
       assert {:warn, [first_item, second_item]} = parse(value, format)
 
-      assert first_item[:data] == %{transaction_time: nil, post_time: Time.new(13, 40, 0)}
-      assert second_item[:data] == %{transaction_time: Time.new(3, 0, 0), post_time: nil}
+      assert first_item[:data] == %{transaction_time: nil, post_time: ~T[13:40:00]}
+      assert second_item[:data] == %{transaction_time: ~T[03:00:00], post_time: nil}
 
       [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1

@@ -8,10 +8,10 @@ defmodule ExFixedWidthParser.TimeParserTest do
       format = [hour: 0..1, minute: 2..3, second: 4..5]
 
       [
-        ["035901", Time.new(3, 59, 1)],
-        ["000000", Time.new(0, 0, 0)],
-        ["235959", Time.new(23, 59, 59)],
-        [" 3 0 5", Time.new(3, 0, 5)],
+        ["035901", ~T[03:59:01]],
+        ["000000", ~T[00:00:00]],
+        ["235959", ~T[23:59:59]],
+        [" 3 0 5", ~T[03:00:05]],
       ]
       |> Enum.each(
         fn ([input, expected]) ->
@@ -24,10 +24,10 @@ defmodule ExFixedWidthParser.TimeParserTest do
       format = [hour: 0..1, minute: 2..3]
 
       [
-        ["0359", Time.new(3, 59, 0)],
-        ["0000", Time.new(0, 0, 0)],
-        ["2359", Time.new(23, 59, 0)],
-        [" 3 0", Time.new(3, 0, 0)],
+        ["0359", ~T[03:59:00]],
+        ["0000", ~T[00:00:00]],
+        ["2359", ~T[23:59:00]],
+        [" 3 0", ~T[03:00:00]],
       ]
       |> Enum.each(
         fn ([input, expected]) ->

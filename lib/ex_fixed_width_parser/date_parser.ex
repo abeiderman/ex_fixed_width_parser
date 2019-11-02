@@ -6,7 +6,7 @@ defmodule ExFixedWidthParser.DateParser do
 
     case Date.from_iso8601("#{year}-#{month}-#{day}") do
       {:error, _} -> :error
-      date -> {:ok, date}
+      result -> result
     end
   end
 

@@ -18,7 +18,7 @@ defmodule ExFixedWidthParser.TimeParser do
   defp parse_time(hour, minute, second) do
     case Time.from_iso8601("#{hour}:#{minute}:#{second}") do
       {:error, _} -> :error
-      time -> {:ok, time}
+      {:ok, time} -> {:ok, time}
     end
   end
 

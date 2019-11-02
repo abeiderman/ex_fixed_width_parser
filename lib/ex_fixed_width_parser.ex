@@ -102,6 +102,18 @@ defmodule ExFixedWidthParser do
     end
   end
 
+  defp parse_value(string, :julian_date) do
+    case ExFixedWidthParser.JulianDateParser.parse(string) do
+      {:ok, parsed_date} -> {:ok, parsed_date}
+      :error ->
+        {
+          :error,
+          nil,
+          "Unable to parse julian date '#{string}'"
+        }
+    end
+  end
+
   defp parse_value(string, {:time, [format: format]}) do
     with {:ok, time_format} <- ExFixedWidthParser.TimeFormatParser.parse(format),
          {:ok, parsed_time} <- ExFixedWidthParser.TimeParser.parse(string, time_format)

@@ -53,7 +53,13 @@ defmodule ExFixedWidthParser.Amex.EptrnParser do
   defp detail_record_format("00") do
     %{
       1..10 => [:amex_payee_number, :integer],
-      44..45 => [:type_code, :text]
+      11..20 => [:amex_sort_field_1, :text],
+      21..30 => [:amex_sort_field_2, :text],
+      31..34 => [:payment_year, :integer],
+      35..42 => [:payment_number, :text],
+      43..43 => [:record_type_code, :text],
+      44..45 => [:type_code, :text],
+      46..52 => [:payment_date, :julian_date]
     }
   end
 
@@ -61,6 +67,7 @@ defmodule ExFixedWidthParser.Amex.EptrnParser do
     %{
       1..10 => [:amex_payee_number, :integer],
       11..20 => [:amex_se_number, :integer],
+      43..43 => [:record_type_code, :text],
       44..45 => [:type_code, :text]
     }
   end
