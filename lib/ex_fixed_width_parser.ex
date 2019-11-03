@@ -72,6 +72,10 @@ defmodule ExFixedWidthParser do
     end
   end
 
+  defp parse_value(string, {:integer, [trim: true]}) do
+    string |> String.trim() |> parse_value(:integer)
+  end
+
   defp parse_value(string, :text), do: {:ok, string}
 
   defp parse_value(string, :decimal), do: parse_value(string, {:decimal, [decimals: 0]})

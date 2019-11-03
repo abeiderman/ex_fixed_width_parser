@@ -59,7 +59,11 @@ defmodule ExFixedWidthParser.Amex.EptrnParser do
       35..42 => [:payment_number, :text],
       43..43 => [:record_type_code, :text],
       44..45 => [:type_code, :text],
-      46..52 => [:payment_date, :julian_date]
+      46..52 => [:payment_date, :julian_date],
+      53..63 => [:payment_amount, overpunch: [decimals: 2]],
+      64..72 => [:debit_balance_amount, overpunch: [decimals: 2]],
+      73..81 => [:aba_bank_number, :integer],
+      82..98 => [:se_dda_number, integer: [trim: true]]
     }
   end
 
@@ -67,8 +71,25 @@ defmodule ExFixedWidthParser.Amex.EptrnParser do
     %{
       1..10 => [:amex_payee_number, :integer],
       11..20 => [:amex_se_number, :integer],
+      21..30 => [:se_unit_number, :text],
+      31..34 => [:payment_year, :integer],
+      35..42 => [:payment_number, :text],
       43..43 => [:record_type_code, :text],
-      44..45 => [:type_code, :text]
+      44..45 => [:type_code, :text],
+      46..52 => [:se_business_date, :julian_date],
+      53..59 => [:amex_process_date, :julian_date],
+      60..65 => [:soc_invoice_number, :integer],
+      66..76 => [:soc_amount, overpunch: [decimals: 2]],
+      77..85 => [:discount_amount, overpunch: [decimals: 2]],
+      86..92 => [:service_fee_amount, overpunch: [decimals: 2]],
+      100..110 => [:net_soc_amount, overpunch: [decimals: 2]],
+      111..115 => [:discount_rate, :integer],
+      116..120 => [:service_fee_rate, :integer],
+      142..152 => [:amex_gross_amount, overpunch: [decimals: 2]],
+      153..157 => [:amex_roc_count, :overpunch],
+      158..166 => [:tracking_id, :integer],
+      167..167 => [:cpc_indicator, :text],
+      183..189 => [:amex_ro_count_poa, :overpunch]
     }
   end
 
