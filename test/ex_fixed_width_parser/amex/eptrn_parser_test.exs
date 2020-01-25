@@ -52,7 +52,7 @@ defmodule ExFixedWidthParser.Amex.EptrnParserTest do
     assert data[:type] == :summary_record
     assert data[:type_code] == "00"
     assert data[:record_type_code] == "1"
-    assert data[:amex_payee_number] == 3491124567
+    assert data[:amex_payee_number] == 3_491_124_567
     assert data[:amex_sort_field_1] == "0000000000"
     assert data[:amex_sort_field_2] == "0000000000"
     assert data[:payment_year] == 2013
@@ -60,7 +60,7 @@ defmodule ExFixedWidthParser.Amex.EptrnParserTest do
     assert data[:payment_date] == ~D[2013-03-09]
     assert data[:payment_amount] == Decimal.new("50035.54")
     assert data[:debit_balance_amount] == Decimal.new("0.00")
-    assert data[:aba_bank_number] == 121140399
+    assert data[:aba_bank_number] == 121_140_399
     assert data[:se_dda_number] == 4000
   end
 
@@ -72,8 +72,8 @@ defmodule ExFixedWidthParser.Amex.EptrnParserTest do
     assert data[:type] == :summary_of_charge_detail_record
     assert data[:type_code] == "10"
     assert data[:record_type_code] == "2"
-    assert data[:amex_payee_number] == 3491124567
-    assert data[:amex_se_number] == 3491124567
+    assert data[:amex_payee_number] == 3_491_124_567
+    assert data[:amex_se_number] == 3_491_124_567
     assert data[:se_unit_number] == "          "
     assert data[:payment_year] == 2013
     assert data[:payment_number] == "DUMT1234"
@@ -88,7 +88,7 @@ defmodule ExFixedWidthParser.Amex.EptrnParserTest do
     assert data[:service_fee_rate] == 30
     assert data[:amex_gross_amount] == Decimal.new("50035.54")
     assert data[:amex_roc_count] == 405
-    assert data[:tracking_id] == 65013192
+    assert data[:tracking_id] == 65_013_192
     assert data[:cpc_indicator] == " "
     assert data[:amex_ro_count_poa] == 405
   end

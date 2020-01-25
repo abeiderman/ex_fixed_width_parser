@@ -102,8 +102,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{data: %{amount: 16520, fee: Decimal.new("165.35")}},
-        %{data: %{amount: -26520, fee: Decimal.new("-65.35")}},
+        %{data: %{amount: 16_520, fee: Decimal.new("165.35")}},
+        %{data: %{amount: -26_520, fee: Decimal.new("-65.35")}},
       ]
     end
 
@@ -120,7 +120,7 @@ defmodule ExFixedWidthParserTest do
       assert {:warn, [first_item, second_item]} = parse(value, format)
 
       assert first_item[:data] == %{amount: nil, fee: Decimal.new("165.35")}
-      assert second_item[:data] ==  %{amount: -26520, fee: nil}
+      assert second_item[:data] ==  %{amount: -26_520, fee: nil}
 
       [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1
@@ -150,8 +150,8 @@ defmodule ExFixedWidthParserTest do
       assert {:ok, result} = parse(value, format)
 
       assert result == [
-        %{data: %{amount: Decimal.new(16520), fee: Decimal.new("165.35")}},
-        %{data: %{amount: Decimal.new(26523), fee: Decimal.new("65.35")}},
+        %{data: %{amount: Decimal.new(16_520), fee: Decimal.new("165.35")}},
+        %{data: %{amount: Decimal.new(26_523), fee: Decimal.new("65.35")}},
       ]
     end
 
@@ -168,7 +168,7 @@ defmodule ExFixedWidthParserTest do
       assert {:warn, [first_item, second_item]} = parse(value, format)
 
       assert first_item[:data] == %{amount: nil, fee: Decimal.new("165.35")}
-      assert second_item[:data] == %{amount: Decimal.new(26523), fee: nil}
+      assert second_item[:data] == %{amount: Decimal.new(26_523), fee: nil}
 
       [first_error] = first_item[:errors]
       assert first_error[:line_number] == 1
